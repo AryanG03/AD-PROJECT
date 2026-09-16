@@ -1,13 +1,13 @@
-"""
+﻿"""
 preprocessor.py
-───────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Transforms the raw e-commerce CSV (or synthetic data) into padded integer
 sequences ready for the GRU model.
 
 Pipeline steps:
-  1. Load real CSV  →  synthesise per-customer interaction sequences
+  1. Load real CSV  â†’  synthesise per-customer interaction sequences
   2. Clean / deduplicate
-  3. Encode categoricals (LabelEncoder → integer IDs)
+  3. Encode categoricals (LabelEncoder â†’ integer IDs)
   4. Normalise numeric features (dwell_time, sequence_position)
   5. Pad / truncate to max_seq_len
   6. 70/15/15 train/val/test split (stratified by customer if possible)
@@ -19,30 +19,26 @@ Output schema per row:
   | target_item (int) | seq_len (int)
 """
 
+import json
 import os
 import sys
-import json
-import random
+from datetime import timedelta
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 import yaml
+from sklearn.preprocessing import LabelEncoder
 
 # Make src importable when run from neuro-cx/
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data_pipeline.synthetic_generator import (
-    generate_synthetic_dataset,
-    ACTION_TYPES,
     CATEGORIES,
-    ITEMS_PER_CATEGORY,
-    TRANSITION_PROBS,
     DWELL_MEANS,
+    ITEMS_PER_CATEGORY,
+    generate_synthetic_dataset,
 )
 
-
-# ── Action weight mapping (reinforcement signal strength) ────────────────────
+# â”€â”€ Action weight mapping (reinforcement signal strength) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 DEFAULT_ACTION_WEIGHTS = {
     "purchase":    3.0,
@@ -53,10 +49,10 @@ DEFAULT_ACTION_WEIGHTS = {
 }
 
 
-# ── Real CSV → Sequence synthesis ────────────────────────────────────────────
+# â”€â”€ Real CSV â†’ Sequence synthesis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _parse_amount(val: str) -> float:
-    """Parse '$1,234.56 ' → 1234.56."""
+    """Parse '$1,234.56 ' â†’ 1234.56."""
     if isinstance(val, (int, float)):
         return float(val)
     cleaned = str(val).replace("$", "").replace(",", "").strip()
@@ -78,9 +74,9 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
 
     Each real CSV row represents one customer profile + one purchase event.
     We back-fill earlier synthetic events to create a plausible journey:
-      - Number of prior interactions  ∝  Frequency_of_Purchase
+      - Number of prior interactions  âˆ  Frequency_of_Purchase
       - Dominant category             =  Purchase_Category from real data
-      - Purchase intent maps to action mix (impulsive → fewer views before purchase)
+      - Purchase intent maps to action mix (impulsive â†’ fewer views before purchase)
       - Time anchor                   =  Time_of_Purchase from real data
 
     The resulting sequences retain real customer attribute distributions while
@@ -107,7 +103,7 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
         # Parse anchor timestamp
         try:
             anchor_dt = pd.to_datetime(record["Time_of_Purchase"], dayfirst=False)
-        except Exception:
+        except (ValueError, TypeError):
             anchor_dt = pd.Timestamp("2024-06-01")
 
         pref_cat = cat_mapping.get(str(record["Purchase_Category"]).strip(), rng.choice(all_categories))
@@ -118,14 +114,14 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
             for item in _category_to_item_range(cat, all_categories)
         ]
 
-        # Determine sequence length from Frequency_of_Purchase (1–12 → 3–14 events)
+        # Determine sequence length from Frequency_of_Purchase (1â€“12 â†’ 3â€“14 events)
         freq = int(record.get("Frequency_of_Purchase", 4))
         seq_len = max(3, min(14, freq + 2))
 
         # Intent-driven action bias
         intent = str(record.get("Purchase_Intent", "Need-based")).lower()
         if "impulsive" in intent:
-            # Short funnel: view → purchase fast
+            # Short funnel: view â†’ purchase fast
             action_seq = (["view"] * max(1, seq_len // 3)
                           + ["add_to_cart"] * 1
                           + ["purchase"])
@@ -167,7 +163,7 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
 
             # Rating signal: high-rated products generate reviews
             if action == "review":
-                product_rating = int(record.get("Product_Rating", 3))
+                int(record.get("Product_Rating", 3))
                 item_id = int(rng.choice(pref_items))  # always preferred for reviews
 
             event_rows.append({
@@ -180,7 +176,7 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
             })
 
             # Step backward in time
-            gap = float(rng.uniform(300, 3600 * 24))  # 5 min – 1 day gap
+            gap = float(rng.uniform(300, 3600 * 24))  # 5 min â€“ 1 day gap
             current_dt = current_dt - timedelta(seconds=dwell + gap)
 
         # Reverse so events are chronological
@@ -196,7 +192,7 @@ def _synthesize_sequences_from_csv(df_raw: pd.DataFrame, seed: int = 42) -> pd.D
     return df
 
 
-# ── Encoding + Feature engineering ──────────────────────────────────────────
+# â”€â”€ Encoding + Feature engineering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def encode_interactions(df: pd.DataFrame, action_weights: dict) -> tuple[pd.DataFrame, dict]:
     """
@@ -230,7 +226,7 @@ def encode_interactions(df: pd.DataFrame, action_weights: dict) -> tuple[pd.Data
     return df, encoders
 
 
-# ── Sequence building + Padding ──────────────────────────────────────────────
+# â”€â”€ Sequence building + Padding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def build_sequences(df: pd.DataFrame, max_seq_len: int = 50) -> pd.DataFrame:
     """
@@ -293,7 +289,7 @@ def build_sequences(df: pd.DataFrame, max_seq_len: int = 50) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
-# ── Main pipeline ─────────────────────────────────────────────────────────────
+# â”€â”€ Main pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = False):
     """
@@ -311,7 +307,7 @@ def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = Fa
         cfg = yaml.safe_load(f)
 
     data_cfg  = cfg["data"]
-    feat_cfg  = cfg["features"]
+    cfg["features"]
     train_cfg = cfg["training"]
 
     action_weights = cfg["features"]["action_weights"]
@@ -320,7 +316,7 @@ def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = Fa
 
     os.makedirs(data_cfg["processed_dir"], exist_ok=True)
 
-    # ── Step 1: Load data ─────────────────────────────────────────────────────
+    # â”€â”€ Step 1: Load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     print("=" * 60)
     print("Neuro-CX Data Pipeline")
     print("=" * 60)
@@ -334,11 +330,11 @@ def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = Fa
         print(f"      {len(df_events):,} interaction events generated for "
               f"{df_events['customer_id'].nunique()} customers.")
     else:
-        print("[1/5] Real CSV not found — using pure synthetic dataset.")
+        print("[1/5] Real CSV not found â€” using pure synthetic dataset.")
         df_events = generate_synthetic_dataset(n_customers=500, seed=seed)
         print(f"      {len(df_events):,} events for {df_events['customer_id'].nunique()} customers.")
 
-    # ── Step 2: Clean ─────────────────────────────────────────────────────────
+    # â”€â”€ Step 2: Clean â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     print("[2/5] Cleaning...")
     before = len(df_events)
     df_events = df_events.drop_duplicates(
@@ -349,17 +345,17 @@ def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = Fa
     df_events["item_id"]    = pd.to_numeric(df_events["item_id"], errors="coerce").fillna(0).astype(int)
     print(f"      Removed {before - len(df_events)} duplicate/null rows -> {len(df_events):,} remain.")
 
-    # ── Step 3: Encode ────────────────────────────────────────────────────────
+    # â”€â”€ Step 3: Encode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     print("[3/5] Encoding features...")
     df_events, encoders = encode_interactions(df_events, action_weights)
     print(f"      {encoders['n_items']} unique items, {encoders['n_actions']} action types.")
 
-    # ── Step 4: Build sequences ───────────────────────────────────────────────
+    # â”€â”€ Step 4: Build sequences â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     print(f"[4/5] Building sequences (max_len={max_seq_len})...")
     df_seqs = build_sequences(df_events, max_seq_len=max_seq_len)
     print(f"      {len(df_seqs):,} training examples built.")
 
-    # ── Step 5: Split + save ──────────────────────────────────────────────────
+    # â”€â”€ Step 5: Split + save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     print("[5/5] Splitting and saving...")
     train_ratio = data_cfg["train_ratio"]
     val_ratio   = data_cfg["val_ratio"]
@@ -402,7 +398,7 @@ def run_pipeline(config_path: str = "config.yaml", use_synthetic_only: bool = Fa
     df_events.to_parquet(raw_sample_path, index=False)
     print(f"      Raw interactions saved to {raw_sample_path}")
 
-    print("\n✓ Pipeline complete.\n")
+    print("\nâœ“ Pipeline complete.\n")
     return df_train, df_val, df_test, encoders
 
 
@@ -413,3 +409,4 @@ if __name__ == "__main__":
     parser.add_argument("--synthetic", action="store_true", help="Use synthetic data only")
     args = parser.parse_args()
     run_pipeline(config_path=args.config, use_synthetic_only=args.synthetic)
+

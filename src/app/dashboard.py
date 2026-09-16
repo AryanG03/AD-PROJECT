@@ -15,25 +15,23 @@ Run with:
   (or: py run_app.py)
 """
 
+import json
 import os
 import sys
-import json
-import math
+
 import numpy as np
 import pandas as pd
-import torch
-import streamlit as st
-import plotly.graph_objects as go
 import plotly.express as px
-from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import streamlit as st
+import torch
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
-from model.trainer import load_checkpoint
 from model.neuro_cx_model import NeuroCXModel
-from model.gru_baseline import GRUBaseline
+from model.trainer import load_checkpoint
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -344,7 +342,7 @@ def render_recommendations(top_k_idx, top_k_scores, n_items_total):
     for rank, (item_id, score) in enumerate(zip(top_k_idx, top_k_scores), 1):
         name = item_id_to_name(item_id)
         pct  = score * 100
-        bar_w = int(pct / max(top_k_scores) * 100) if max(top_k_scores) > 0 else 0
+        int(pct / max(top_k_scores) * 100) if max(top_k_scores) > 0 else 0
         st.markdown(
             f'<div class="rec-item">'
             f'<span class="rec-rank">#{rank}</span>'
@@ -380,28 +378,28 @@ def render_hidden_state_viz(hidden_history: list, action_history: list):
         colorscale="RdBu",
         zmid=0,
         showscale=True,
-        colorbar=dict(title="Activation", thickness=12, len=0.8),
+        colorbar={"title": "Activation", "thickness": 12, "len": 0.8},
     ))
     # Annotate action type on each step
     for i, act in enumerate(action_history):
-        color = ACTION_COLORS.get(act, "#aaa")
+        ACTION_COLORS.get(act, "#aaa")
         fig_heat.add_annotation(
             x=steps[i], y=D - 0.5,
             text=ACTION_ICONS.get(act, "•"),
             showarrow=False,
-            font=dict(size=12),
+            font={"size": 12},
             yref="y",
         )
 
     fig_heat.update_layout(
-        title=dict(text="Hidden State Heatmap (first 64 dims)", font=dict(size=13)),
+        title={"text": "Hidden State Heatmap (first 64 dims)", "font": {"size": 13}},
         xaxis_title="Time step",
         yaxis_title="Hidden dim",
         height=320,
-        margin=dict(l=40, r=20, t=50, b=40),
+        margin={"l": 40, "r": 20, "t": 50, "b": 40},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#ccc"),
+        font={"color": "#ccc"},
     )
     st.plotly_chart(fig_heat, use_container_width=True)
 
@@ -413,14 +411,14 @@ def render_hidden_state_viz(hidden_history: list, action_history: list):
     fig_line.add_trace(go.Scatter(
         x=steps, y=mean_act + std_act,
         fill=None, mode="lines",
-        line=dict(width=0),
+        line={"width": 0},
         showlegend=False,
         name="Upper bound",
     ))
     fig_line.add_trace(go.Scatter(
         x=steps, y=mean_act - std_act,
         fill="tonexty", mode="lines",
-        line=dict(width=0),
+        line={"width": 0},
         fillcolor="rgba(102,126,234,0.15)",
         showlegend=False,
         name="Std band",
@@ -428,27 +426,27 @@ def render_hidden_state_viz(hidden_history: list, action_history: list):
     fig_line.add_trace(go.Scatter(
         x=steps, y=mean_act,
         mode="lines+markers",
-        line=dict(color="#667eea", width=2.5),
-        marker=dict(
-            size=[10 if a == "purchase" else 6 for a in action_history],
-            color=[ACTION_COLORS.get(a, "#aaa") for a in action_history],
-            symbol=["star" if a == "purchase" else "circle" for a in action_history],
-            line=dict(width=1, color="white"),
-        ),
+        line={"color": "#667eea", "width": 2.5},
+        marker={
+            "size": [10 if a == "purchase" else 6 for a in action_history],
+            "color": [ACTION_COLORS.get(a, "#aaa") for a in action_history],
+            "symbol": ["star" if a == "purchase" else "circle" for a in action_history],
+            "line": {"width": 1, "color": "white"},
+        },
         name="Mean activation",
     ))
 
     fig_line.update_layout(
-        title=dict(text="Mean Hidden Activation (⭐ = purchase event)", font=dict(size=13)),
+        title={"text": "Mean Hidden Activation (⭐ = purchase event)", "font": {"size": 13}},
         xaxis_title="Time step",
         yaxis_title="Mean |h|",
         height=250,
-        margin=dict(l=40, r=20, t=50, b=40),
+        margin={"l": 40, "r": 20, "t": 50, "b": 40},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#ccc"),
-        xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+        font={"color": "#ccc"},
+        xaxis={"gridcolor": "rgba(255,255,255,0.05)"},
+        yaxis={"gridcolor": "rgba(255,255,255,0.05)"},
         showlegend=False,
     )
     st.plotly_chart(fig_line, use_container_width=True)
@@ -546,11 +544,11 @@ def render_metrics_panel(model_baseline, model_neurocx, customer_df, enc_meta, m
         title="Neuro-CX vs GRU Baseline — Evaluation Comparison on Selected Customer",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#ccc"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=40, r=20, t=50, b=40),
-        xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.05)")
+        font={"color": "#ccc"},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        margin={"l": 40, "r": 20, "t": 50, "b": 40},
+        xaxis={"gridcolor": "rgba(255,255,255,0.05)"},
+        yaxis={"gridcolor": "rgba(255,255,255,0.05)"}
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -578,8 +576,8 @@ def main():
 
     if not os.path.exists(baseline_ckpt_path) or not os.path.exists(neurocx_ckpt_path):
         st.warning(
-            f"⚠️ Checkpoints not found in `checkpoints/`.\n\n"
-            f"Please run `py run_train.py` to train both models first."
+            "⚠️ Checkpoints not found in `checkpoints/`.\n\n"
+            "Please run `py run_train.py` to train both models first."
         )
         st.stop()
 
@@ -680,7 +678,7 @@ def main():
     item_str   = item_id_to_name(int(current_event["item_id"]))
 
     with col_step_info:
-        badge_cls = f"badge-{action_str.replace(' ', '_')}"
+        f"badge-{action_str.replace(' ', '_')}"
         icon = ACTION_ICONS.get(action_str, "•")
         color = ACTION_COLORS.get(action_str, "#aaa")
         st.markdown(
@@ -697,10 +695,10 @@ def main():
     st.progress((step + 1) / n_events)
 
     # ── Run inference at current step ─────────────────────────────────────────
-    action_seq_t, item_seq_t, dwell_seq_t, weight_seq_t, actual_len = \
+    action_seq_t, item_seq_t, dwell_seq_t, weight_seq_t, _actual_len = \
         build_tensors_for_step(customer_df, step, enc_meta, max_seq_len, device)
 
-    top_k_idx, top_k_scores, last_hidden, all_hiddens = get_recommendations(
+    top_k_idx, top_k_scores, _last_hidden, _all_hiddens = get_recommendations(
         model, action_seq_t, item_seq_t, dwell_seq_t, weight_seq_t, top_k=top_k
     )
 

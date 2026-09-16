@@ -40,10 +40,10 @@ Architecture:
 """
 
 import math
+
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
+from torch import nn
 
 
 class NeuroCXModel(nn.Module):
@@ -157,7 +157,7 @@ class NeuroCXModel(nn.Module):
         action_seq: torch.Tensor,     # (B, T)
         dwell_seq: torch.Tensor,      # (B, T)
         weight_seq: torch.Tensor,     # (B, T)  — signal weights
-        hidden: Optional[torch.Tensor] = None,
+        hidden: torch.Tensor | None = None,
         return_all_hidden: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
@@ -198,7 +198,7 @@ class NeuroCXModel(nn.Module):
             w_t = weight_seq[:, t]          # (B,)
 
             # Standard GRU step
-            out_t, hidden = self.gru(x_t, hidden)  # out_t: (B, 1, H)
+            _out_t, hidden = self.gru(x_t, hidden)  # out_t: (B, 1, H)
 
             # ── Reinforcement gate: scale hidden-state update by signal strength
             reinforce_scalar = self.reinforce_gate(w_t.unsqueeze(-1))  # (B, 1)
@@ -244,7 +244,7 @@ class NeuroCXModel(nn.Module):
         dwell_seq: torch.Tensor,
         weight_seq: torch.Tensor,
         top_k: int = 20,
-        device: Optional[torch.device] = None,
+        device: torch.device | None = None,
         return_hidden_history: bool = False,
     ) -> tuple:
         """

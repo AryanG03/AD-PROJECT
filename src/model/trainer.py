@@ -11,24 +11,22 @@ Features:
   - CSV loss log written to logs/
 """
 
+import csv
+import json
 import os
 import sys
-import json
 import time
-import csv
+
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.cuda.amp import GradScaler, autocast
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from tqdm import tqdm
-from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data_pipeline.dataset import get_dataloader
 from model.gru_baseline import GRUBaseline, build_baseline
 from model.neuro_cx_model import NeuroCXModel, build_neuro_cx
-
 
 # â”€â”€ Loss â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -36,7 +34,7 @@ def compute_loss(
     logits: torch.Tensor,
     targets: torch.Tensor,
     model_name: str,
-    weight_seq: Optional[torch.Tensor] = None,
+    weight_seq: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """
     Cross-entropy loss. For NeuroCX, optionally upweight purchase samples.
@@ -176,8 +174,8 @@ def load_checkpoint(checkpoint_path: str, device: torch.device):
 def train(
     model_name: str = "neurocx",
     config_path: str = "config.yaml",
-    epochs_override: Optional[int] = None,
-    patience_override: Optional[int] = None,
+    epochs_override: int | None = None,
+    patience_override: int | None = None,
 ):
     """
     Train a model end-to-end.
@@ -258,7 +256,7 @@ def train(
     t0 = time.time()
 
     for epoch in range(1, epochs + 1):
-        t_epoch = time.time()
+        time.time()
         train_loss = train_epoch(model, train_loader, optimizer, scaler, device, use_amp)
         val_loss   = eval_epoch(model, val_loader, device, use_amp)
         scheduler.step(val_loss)
@@ -291,3 +289,4 @@ def train(
     print(f"Checkpoint: {best_ckpt_path}")
     print(f"Log: {log_path}\n")
     return best_ckpt_path
+

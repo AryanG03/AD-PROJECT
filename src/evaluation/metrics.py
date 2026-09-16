@@ -73,7 +73,7 @@ def accuracy_at_1(scores: torch.Tensor, targets: torch.Tensor) -> float:
 def compute_all_metrics(
     scores: torch.Tensor,
     targets: torch.Tensor,
-    k_values: list[int] = [5, 10, 20],
+    k_values: list[int] | None = None,
 ) -> dict:
     """
     Compute all metrics at multiple k values.
@@ -82,6 +82,8 @@ def compute_all_metrics(
     -------
     dict with keys like "NDCG@5", "HitRate@5", ..., "Accuracy@1"
     """
+    if k_values is None:
+        k_values = [5, 10, 20]
     results = {"Accuracy@1": accuracy_at_1(scores, targets)}
     for k in k_values:
         results[f"NDCG@{k}"]    = ndcg_at_k(scores, targets, k)

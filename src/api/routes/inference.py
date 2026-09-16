@@ -4,20 +4,21 @@ inference.py
 POST /api/inference  —  run model forward pass and return recommendations.
 """
 
-import os
-import sys
 import json
 import math
-import torch
+import os
+import sys
+
 import numpy as np
 import pandas as pd
+import torch
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
+from api.model_registry import get_device, get_model
 from model.neuro_cx_model import NeuroCXModel
-from api.model_registry import get_model, get_device
 
 router = APIRouter(prefix="/api/inference", tags=["inference"])
 
@@ -121,21 +122,19 @@ def run_inference(req: InferenceRequest):
     enc         = _ENCODERS
     max_seq_len = enc.get("max_seq_len", 50)
 
-    action_seq, item_seq, dwell_seq, weight_seq, actual_len = _build_tensors(df, step, max_seq_len, device)
+    action_seq, item_seq, dwell_seq, weight_seq, _actual_len = _build_tensors(df, step, max_seq_len, device)
 
     is_ncx = isinstance(model, NeuroCXModel)
 
     if is_ncx:
         try:
-            logits, hidden, all_hiddens = model(
+            logits, hidden, _all_hiddens = model(
                 item_seq, action_seq, dwell_seq, weight_seq, return_all_hidden=True
             )
         except TypeError:
             logits, hidden = model(item_seq, action_seq, dwell_seq, weight_seq)
-            all_hiddens = None
     else:
         logits, hidden = model(item_seq, action_seq, dwell_seq)
-        all_hiddens = None
 
     probs    = torch.softmax(logits, dim=-1)[0].cpu().numpy()
     top_k    = min(req.top_k, len(probs))

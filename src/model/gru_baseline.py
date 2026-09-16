@@ -9,10 +9,10 @@ Architecture:
   [item_emb + action_emb + dwell_feat]  →  GRU  →  FC  →  logits over all items
 """
 
+
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
+from torch import nn
 
 
 class GRUBaseline(nn.Module):
@@ -78,8 +78,8 @@ class GRUBaseline(nn.Module):
         item_seq: torch.Tensor,       # (B, T)
         action_seq: torch.Tensor,     # (B, T)
         dwell_seq: torch.Tensor,      # (B, T)
-        weight_seq: Optional[torch.Tensor] = None,  # ignored in baseline
-        hidden: Optional[torch.Tensor] = None,
+        weight_seq: torch.Tensor | None = None,  # ignored in baseline
+        hidden: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass.
@@ -89,7 +89,7 @@ class GRUBaseline(nn.Module):
         logits : (B, n_items) — unnormalized scores for next-item prediction
         hidden : (num_layers, B, hidden_size) — final GRU hidden state
         """
-        B, T = item_seq.shape
+        _B, _T = item_seq.shape
 
         # Build input features
         item_e   = self.item_emb(item_seq)               # (B, T, emb_dim)
@@ -114,7 +114,7 @@ class GRUBaseline(nn.Module):
         action_seq: torch.Tensor,
         dwell_seq: torch.Tensor,
         top_k: int = 20,
-        device: Optional[torch.device] = None,
+        device: torch.device | None = None,
     ) -> tuple[list[int], torch.Tensor]:
         """
         Inference API: returns ranked item IDs and final hidden state.

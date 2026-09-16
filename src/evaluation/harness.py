@@ -6,15 +6,15 @@ Evaluation harness: loads a checkpoint, runs it on val/test, returns metrics.
 
 import os
 import sys
-import json
+
 import torch
 from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data_pipeline.dataset import get_dataloader
-from model.trainer import load_checkpoint
-from model.neuro_cx_model import NeuroCXModel
 from evaluation.metrics import compute_all_metrics
+from model.neuro_cx_model import NeuroCXModel
+from model.trainer import load_checkpoint
 
 
 @torch.no_grad()
@@ -22,7 +22,7 @@ def evaluate_checkpoint(
     checkpoint_path: str,
     split: str = "test",
     config_path: str = "config.yaml",
-    k_values: list = None,
+    k_values: list | None = None,
 ) -> dict:
     """
     Load a checkpoint and evaluate it on val or test split.
@@ -46,7 +46,7 @@ def evaluate_checkpoint(
         k_values = cfg["evaluation"]["k_values"]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model, ckpt_data = load_checkpoint(checkpoint_path, device)
+    model, _ckpt_data = load_checkpoint(checkpoint_path, device)
     model.eval()
     model_name = model.MODEL_NAME
 

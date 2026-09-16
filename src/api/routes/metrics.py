@@ -6,9 +6,10 @@ GET /api/ablation  — ablation study results
 GET /api/models    — loaded model info
 """
 
-import os
 import csv
 import json
+import os
+
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api", tags=["metrics"])

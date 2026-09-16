@@ -5,15 +5,17 @@ Runs both baseline and Neuro-CX checkpoints, produces a side-by-side
 comparison table and saves a bar chart to logs/comparison.png.
 """
 
+import json
 import os
 import sys
-import json
+
 import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import matplotlib
+
 from evaluation.harness import evaluate_checkpoint, print_metrics
 
-import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +24,8 @@ import numpy as np
 def run_comparison(
     config_path: str = "config.yaml",
     split: str = "test",
-    baseline_ckpt: str = None,
-    neurocx_ckpt: str = None,
+    baseline_ckpt: str | None = None,
+    neurocx_ckpt: str | None = None,
 ) -> dict:
     """
     Compare baseline vs Neuro-CX on the same split.
@@ -59,7 +61,7 @@ def run_comparison(
         return results
 
     # ── Side-by-side table ────────────────────────────────────────────────────
-    metric_keys = [k for k in results["baseline"].keys()
+    metric_keys = [k for k in results["baseline"]
                    if k not in ("model", "split", "n_eval")]
 
     print(f"\n{'═'*60}")
@@ -98,7 +100,7 @@ def _save_comparison_chart(results: dict, metric_keys: list, logs_dir: str):
     x = np.arange(len(metric_keys))
     width = 0.35
 
-    fig, ax = plt.subplots(figsize=(max(10, len(metric_keys) * 1.2), 5))
+    _fig, ax = plt.subplots(figsize=(max(10, len(metric_keys) * 1.2), 5))
     bars1 = ax.bar(x - width/2, baseline_vals, width,
                    label="GRU Baseline",  color="#4C72B0", alpha=0.85, edgecolor="white")
     bars2 = ax.bar(x + width/2, neurocx_vals,  width,

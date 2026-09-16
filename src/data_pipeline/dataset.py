@@ -12,12 +12,13 @@ Each sample contains:
   - target_item  : ()              int64   — next item to predict
 """
 
-import os
 import ast
+import os
+
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 class InteractionSequenceDataset(Dataset):
@@ -114,7 +115,8 @@ def get_dataloader(
 
 if __name__ == "__main__":
     # Quick smoke-test
-    import sys, os
+    import os
+    import sys
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
     loader = get_dataloader("data/train.parquet", batch_size=4, shuffle=False, num_workers=0)
     batch = next(iter(loader))

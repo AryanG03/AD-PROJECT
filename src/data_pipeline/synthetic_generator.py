@@ -9,11 +9,10 @@ Schema produced:
   customer_id | timestamp | action_type | item_id | dwell_time | sequence_position
 """
 
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-import random
-
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 

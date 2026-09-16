@@ -4,8 +4,9 @@ customers.py
 /api/customers  —  list customer IDs and fetch individual sequences.
 """
 
-import os
 import json
+import os
+
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 

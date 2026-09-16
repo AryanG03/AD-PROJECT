@@ -8,9 +8,9 @@ Launch:
   py app.py --port 8080        # custom port
 """
 
+import argparse
 import os
 import sys
-import argparse
 from contextlib import asynccontextmanager
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -21,14 +21,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import torch
 import uvicorn
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.model_registry import startup as load_models
 from api.routes.customers import router as customers_router
-from api.routes.inference  import router as inference_router
-from api.routes.metrics    import router as metrics_router
+from api.routes.inference import router as inference_router
+from api.routes.metrics import router as metrics_router
 
 # ── App ────────────────────────────────────────────────────────────────────────
 
