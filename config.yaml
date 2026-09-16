@@ -1,0 +1,62 @@
+# Neuro-CX Configuration
+# All tunable hyperparameters and paths in one place.
+# Override any value via CLI args (see run_train.py --help).
+
+# ── Data ─────────────────────────────────────────────────────────────────────
+data:
+  raw_csv: "../Ecommerce_Consumer_Behavior_Analysis_Data.csv"   # relative to neuro-cx/
+  processed_dir: "data/"
+  train_file: "data/train.parquet"
+  val_file:   "data/val.parquet"
+  test_file:  "data/test.parquet"
+  max_seq_len: 50          # truncate/pad sequences to this length
+  train_ratio: 0.70
+  val_ratio:   0.15
+  # test_ratio = remainder (0.15)
+
+# ── Feature Encoding ──────────────────────────────────────────────────────────
+features:
+  item_col:       "item_id"          # encoded integer item ID
+  action_col:     "action_type"      # encoded integer action type
+  dwell_col:      "dwell_time"       # float, normalised
+  position_col:   "sequence_position"
+  # Reinforcement signal weights per action type
+  # Higher = stronger hidden-state update in Neuro-CX model
+  action_weights:
+    purchase:    3.0
+    review:      1.5
+    add_to_cart: 1.5
+    view:        1.0
+    bounce:      0.3
+
+# ── Model ────────────────────────────────────────────────────────────────────
+model:
+  # Shared between baseline and Neuro-CX
+  embedding_dim:  64    # item + action embedding size
+  hidden_size:   128    # GRU hidden state dimension
+  num_layers:      2    # stacked GRU layers
+  dropout:       0.3
+  # Neuro-CX specific
+  decay_half_life: 10.0   # steps; hidden-state half-life when no strong signal
+  min_decay:       0.1    # floor so state never fully zeroes
+
+# ── Training ─────────────────────────────────────────────────────────────────
+training:
+  epochs:              30
+  batch_size:          32
+  learning_rate:       1.0e-3
+  weight_decay:        1.0e-4
+  clip_grad_norm:      1.0
+  use_amp:             true    # mixed precision (torch.cuda.amp)
+  num_workers:         2
+  seed:                42
+  early_stop_patience: 7      # stop if val_loss doesn't improve for this many epochs
+
+# ── Evaluation ───────────────────────────────────────────────────────────────
+evaluation:
+  k_values: [5, 10, 20]   # NDCG@k, HitRate@k
+
+# ── Paths ────────────────────────────────────────────────────────────────────
+paths:
+  checkpoints: "checkpoints/"
+  logs:        "logs/"

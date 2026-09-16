@@ -1,0 +1,33 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+venv/
+
+# PyTorch
+*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+tests/
+
+# Logs (keep only key output files)
+logs/*.csv
+logs/*.png
+
+# Reports
+reports/

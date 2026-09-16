@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neuro-CX | Adaptive Customer Experience</title>
+  <meta name="description" content="Neuroplasticity-inspired GRU recommendation system with reinforcement and forgetting gates." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body>
+  <!-- ── Navigation ─────────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🧠</span>
+      <span class="brand-text">Neuro<span class="brand-accent">CX</span></span>
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-page="explorer" id="nav-explorer">Explorer</button>
+      <button class="nav-btn" data-page="metrics"  id="nav-metrics">Metrics</button>
+      <button class="nav-btn" data-page="ablation" id="nav-ablation">Ablation</button>
+      <button class="nav-btn" data-page="about"    id="nav-about">About</button>
+    </div>
+    <div class="nav-status">
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-text" id="status-text">Connecting…</span>
+    </div>
+  </nav>
+
+  <!-- ── Page containers ────────────────────────────────────────── -->
+  <main class="main-content">
+    <div id="page-explorer" class="page active"></div>
+    <div id="page-metrics"  class="page"></div>
+    <div id="page-ablation" class="page"></div>
+    <div id="page-about"    class="page"></div>
+  </main>
+
+  <!-- ── Toast notifications ────────────────────────────────────── -->
+  <div id="toast-container"></div>
+
+  <!-- ── Scripts ────────────────────────────────────────────────── -->
+  <script src="/static/js/pages/explorer.js"></script>
+  <script src="/static/js/pages/metrics.js"></script>
+  <script src="/static/js/pages/ablation.js"></script>
+  <script src="/static/js/pages/about.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
