@@ -1,6 +1,6 @@
-"""
+﻿"""
 trainer.py
-──────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Training loop for both GRUBaseline and NeuroCXModel.
 
 Features:
@@ -30,7 +30,7 @@ from model.gru_baseline import GRUBaseline, build_baseline
 from model.neuro_cx_model import NeuroCXModel, build_neuro_cx
 
 
-# ── Loss ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Loss â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def compute_loss(
     logits: torch.Tensor,
@@ -42,7 +42,7 @@ def compute_loss(
     Cross-entropy loss. For NeuroCX, optionally upweight purchase samples.
     """
     loss = nn.functional.cross_entropy(logits, targets, reduction="none")  # (B,)
-    # Weight by mean batch signal — batches with more purchases get higher loss weight
+    # Weight by mean batch signal â€” batches with more purchases get higher loss weight
     if weight_seq is not None and model_name == "neuro_cx":
         batch_weights = weight_seq.mean(dim=-1).clamp(min=0.5, max=3.0)  # (B,)
         loss = (loss * batch_weights).mean()
@@ -51,7 +51,7 @@ def compute_loss(
     return loss
 
 
-# ── Training loop ─────────────────────────────────────────────────────────────
+# â”€â”€ Training loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def train_epoch(model, loader, optimizer, scaler, device, use_amp: bool) -> float:
     model.train()
@@ -116,7 +116,7 @@ def eval_epoch(model, loader, device, use_amp: bool) -> float:
     return total_loss / max(len(loader), 1)
 
 
-# ── Save / Load checkpoints ──────────────────────────────────────────────────
+# â”€â”€ Save / Load checkpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def save_checkpoint(model, epoch: int, val_loss: float, checkpoint_dir: str, encoder_meta: dict):
     os.makedirs(checkpoint_dir, exist_ok=True)
@@ -140,7 +140,7 @@ def load_checkpoint(checkpoint_path: str, device: torch.device):
     model : GRUBaseline or NeuroCXModel
     meta  : dict with encoder_meta and training info
     """
-    ckpt = torch.load(checkpoint_path, map_location=device)
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     cfg  = ckpt["model_config"]
 
     if cfg["model_name"] == "gru_baseline":
@@ -171,7 +171,7 @@ def load_checkpoint(checkpoint_path: str, device: torch.device):
     return model, ckpt
 
 
-# ── Full training run ─────────────────────────────────────────────────────────
+# â”€â”€ Full training run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def train(
     model_name: str = "neurocx",
@@ -203,7 +203,7 @@ def train(
     torch.manual_seed(train_cfg["seed"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"\n{'='*60}")
-    print(f"Neuro-CX Trainer — model: {model_name}  device: {device}")
+    print(f"Neuro-CX Trainer â€” model: {model_name}  device: {device}")
     print(f"{'='*60}")
 
     # Load encoder metadata to get n_items / n_actions
@@ -279,7 +279,7 @@ def train(
             best_ckpt_path = save_checkpoint(
                 model, epoch, val_loss, cfg["paths"]["checkpoints"], enc_meta
             )
-            print(f"  ✓ New best checkpoint saved: {best_ckpt_path}")
+            print(f"  âœ“ New best checkpoint saved: {best_ckpt_path}")
         else:
             no_improve += 1
             if no_improve >= patience:
